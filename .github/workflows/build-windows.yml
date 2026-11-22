@@ -1,4 +1,5 @@
-﻿name: Build SliceMaster Windows Installer
+﻿
+name: Build SliceMaster Windows Installer
 
 on:
   workflow_dispatch:
@@ -15,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -30,7 +31,7 @@ jobs:
         run: npm run build
 
       - name: Upload Windows installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: SliceMaster-Windows-Installer
           path: release/*.exe
