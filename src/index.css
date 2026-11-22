@@ -1,25 +1,136 @@
+
 @import "tailwindcss";
 
+/* Global document settings */
 :root {
   font-family: Arial, Helvetica, sans-serif;
-  color: #0f172a;
-  background: #f8fafc;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-* {
+/* Universal reset */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
+/* Document structure */
 html,
 body,
 #root {
+  width: 100%;
   min-height: 100%;
   margin: 0;
+  padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+/* Body */
 body {
-  min-width: 1100px;
+  min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Root application */
+#root {
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+/* Form elements */
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input,
+textarea,
+select {
+  max-width: 100%;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* Remove default heading margins */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-top: 0;
+}
+
+/* Media elements */
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Links */
+a {
+  text-decoration: none;
+}
+
+/* Focus accessibility */
+:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  text-shadow: none;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  body {
+    min-width: 320px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
