@@ -1,5 +1,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+
 import {
   LayoutDashboard, ShoppingCart, Package, Tags, Users, Truck,
   Receipt, BarChart3, Settings, Search, Plus, RefreshCw,
@@ -2487,13 +2489,20 @@ export default function App() {
             );
           })}
 
-          <div className="sidebar-bottom">
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <ShieldCheck size={14} color="#d5a85c" />
-              Offline desktop system
-            </div>
-            <div style={{ marginTop: 8 }}>SliceMaster POS ERP · v3.1.0</div>
-          </div>
+          <div className="sidebar-bottom" style={{ fontSize: "12px", color: "#9ca3af" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: 7, color: "#e5e7eb", fontWeight: 500 }}>
+    <ShieldCheck size={14} color="#d5a85c" /> Offline desktop system
+  </div>
+  <div style={{ marginTop: 5, fontSize: "11px", color: "#9ca3af" }}>
+    SliceMaster POS ERP · v3.1.0
+  </div>
+  <div style={{ marginTop: 8, fontSize: "10px", color: "#6b7280" }}>
+    © 2026 POS ERP · Engineered by Hasnain Chohan | 0323-6352450
+  </div>
+</div>
+
+
+          
         </aside>
 
         <main className="main">
@@ -2586,46 +2595,466 @@ export default function App() {
         </div>
       )}
 
-      {/* CUSTOMER RECEIPT — optimized for 80mm thermal printers */}
-      {printData && (
-        <div className="print-only">
-          <div className="receipt-paper">
-            <div className="receipt-brand-mark">SM</div>
-            <h2 className="receipt-store">{settings.storeName || "SliceMaster Pizza"}</h2>
-            <div className="receipt-tagline">FRESHLY MADE · SERVED WITH LOVE</div>
-            {settings.showAddress && settings.address && <div className="receipt-contact">{settings.address}</div>}
-            {settings.showPhone && settings.phone && <div className="receipt-contact">{settings.phone}</div>}
-            {settings.showEmail && settings.email && <div className="receipt-contact">{settings.email}</div>}
-            <div className="receipt-rule receipt-rule-heavy" />
-            <div className="receipt-title">CUSTOMER RECEIPT</div>
-            <div className="receipt-meta"><span>Invoice</span><strong>{printData.sale?.invoice_number || printData.sale?.invoice_no || printData.sale?.id || "—"}</strong></div>
-            <div className="receipt-meta"><span>Date</span><strong>{printData.sale?.created_at ? formatDate(printData.sale.created_at) : new Date().toLocaleString()}</strong></div>
-            <div className="receipt-meta"><span>Customer</span><strong>{printData.customerName || printData.sale?.customer_name || "Walk-in Customer"}</strong></div>
-            <div className="receipt-rule" />
-            <div className="receipt-items-head"><span>ITEM / QTY</span><span>AMOUNT</span></div>
-            {(printData.items || []).map((item,index)=>{
-              const itemName=item.name||item.product_name||item.deal_name||"Product";
-              const price=Number(item.price_paisa??item.unit_price_paisa??0);
-              const qty=Number(item.quantity||0);
-              const line=Number(item.line_total_paisa??Math.round(price*qty));
-              return <div className="receipt-item" key={item.id||item.product_id||index}><div className="receipt-item-info"><strong>{itemName}</strong><small>{qty} × {money(price)}</small></div><strong>{money(line)}</strong></div>;
-            })}
-            <div className="receipt-rule" />
-            <div className="receipt-total-row"><span>Subtotal</span><span>{money(printData.subtotalPaisa)}</span></div>
-            {Number(printData.discountPaisa)>0&&<div className="receipt-total-row"><span>Discount</span><span>-{money(printData.discountPaisa)}</span></div>}
-            {Number(printData.taxPaisa)>0&&<div className="receipt-total-row"><span>Tax</span><span>{money(printData.taxPaisa)}</span></div>}
-            <div className="receipt-grand"><span>TOTAL</span><strong>{money(printData.totalPaisa)}</strong></div>
-            <div className="receipt-total-row"><span>Paid ({printData.paymentMethod||"cash"})</span><span>{money(printData.receivedPaisa ?? printData.totalPaisa)}</span></div>
-            <div className="receipt-total-row"><span>Change</span><span>{money(printData.changePaisa||0)}</span></div>
-            <div className="receipt-rule receipt-rule-heavy" />
-            <div className="receipt-thanks">{settings.receiptFooter || "Thank you for visiting!"}</div>
-            <div className="receipt-message">{settings.receiptMessage || "Please visit again."}</div>
-            <div className="receipt-bottom">Powered by SliceMaster POS</div>
+            {/* CUSTOMER RECEIPT — optimized for 58mm & 80mm thermal printers */}
+      
+{printData && (() => {
+  const invNo = printData.sale?.invoice_number || printData.sale?.invoice_no || printData.sale?.id || "—";
+  const invDate = printData.sale?.created_at ? formatDate(printData.sale.created_at) : new Date().toLocaleString();
+  const custName = printData.customerName || printData.sale?.customer_name || "Walk-in Customer";
+  const itemsList = Array.isArray(printData.items) ? printData.items : [];
+  const totalQty = itemsList.reduce((sum, it) => sum + Number(it.quantity || 0), 0);
+
+  const subtotal = Number(printData.subtotalPaisa ?? 0);
+  const discount = Number(printData.discountPaisa ?? 0);
+  const tax = Number(printData.taxPaisa ?? 0);
+  const total = Number(printData.totalPaisa ?? 0);
+  const received = Number(printData.receivedPaisa ?? total);
+  const change = Number(printData.changePaisa ?? 0);
+
+  const qrPayload = [
+    settings.storeName || "SliceMaster Pizza",
+    `Invoice: ${invNo}`,
+    `Date: ${invDate}`,
+    `Customer: ${custName}`,
+    ...itemsList.map(it => {
+      const price = Number(it.price_paisa ?? it.unit_price_paisa ?? 0);
+      const qty = Number(it.quantity || 0);
+      const line = Number(it.line_total_paisa ?? Math.round(price * qty));
+      return `${it.name || it.product_name || it.deal_name || "Item"} x${qty} = ${money(line)}`;
+    }),
+    `Subtotal: ${money(subtotal)}`,
+    `Discount: ${money(discount)}`,
+    `Tax: ${money(tax)}`,
+    `Total: ${money(total)}`,
+    `Payment: ${(printData.paymentMethod || "cash").toUpperCase()}`
+  ].join("\n");
+
+  return (
+    <div className="print-only">
+      <div className="receipt-paper">
+
+        <style>{`
+          .receipt-paper {
+            width: 100%;
+            box-sizing: border-box;
+            background: #fff;
+            color: #000;
+            padding: 9px 7px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            line-height: 1.4;
+          }
+
+          .receipt-paper * {
+            box-sizing: border-box;
+          }
+
+          .receipt-brand-mark {
+            display: inline-block;
+            background: #000;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            padding: 5px 13px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+          }
+
+          .receipt-store {
+            font-size: 19px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin: 3px 0;
+            overflow-wrap: anywhere;
+          }
+
+          .receipt-tagline {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+          }
+
+          .receipt-contact {
+            font-size: 10px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+          }
+
+          .receipt-rule {
+            border-top: 1.5px dashed #000;
+            margin: 7px 0;
+          }
+
+          .receipt-rule-heavy {
+            border-top: 2px solid #000;
+          }
+
+          .receipt-title {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            padding: 5px 0;
+          }
+
+          .receipt-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 6px;
+            padding: 2px 0;
+            font-size: 10.5px;
+          }
+
+          .receipt-meta strong {
+            text-align: right;
+            overflow-wrap: anywhere;
+          }
+
+          .receipt-items-head {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1.5px dashed #000;
+            border-bottom: 1.5px dashed #000;
+            padding: 5px 0;
+            font-size: 10px;
+            font-weight: 900;
+            margin-top: 5px;
+          }
+
+          .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 7px;
+            padding: 5px 0;
+            border-bottom: 1px dotted #777;
+            font-size: 11px;
+          }
+
+          .receipt-item-info {
+            flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
+          }
+
+          .receipt-item-info strong {
+            display: block;
+            font-size: 11px;
+            font-weight: 900;
+          }
+
+          .receipt-item-info small {
+            display: block;
+            font-size: 9.5px;
+            margin-top: 2px;
+          }
+
+          .receipt-item > strong {
+            white-space: nowrap;
+            font-weight: 900;
+          }
+
+          .receipt-total-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            padding: 2px 0;
+            font-size: 10.5px;
+          }
+
+          .receipt-grand {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 7px 2px;
+            margin: 8px 0;
+            font-size: 15px;
+            font-weight: 900;
+            gap: 5px;
+          }
+
+          .receipt-qr {
+            text-align: center;
+            border-top: 1.5px dashed #000;
+            border-bottom: 1.5px dashed #000;
+            padding: 9px 0;
+            margin: 9px 0;
+          }
+
+          .receipt-qr-frame {
+            display: inline-block;
+            border: 1.5px solid #000;
+            padding: 5px;
+            background: #fff;
+          }
+
+          .receipt-thanks {
+            font-size: 12px;
+            font-weight: 900;
+            text-align: center;
+            margin-top: 8px;
+          }
+
+          .receipt-message {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 3px;
+          }
+
+          .receipt-bottom {
+            text-align: center;
+            border-top: 1px solid #000;
+            padding-top: 6px;
+            margin-top: 9px;
+            font-size: 9.5px;
+            line-height: 1.5;
+          }
+
+          @media print {
+            @page {
+              margin: 0;
+            }
+
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #fff !important;
+            }
+
+            body * {
+              visibility: hidden !important;
+            }
+
+            .print-only,
+            .print-only * {
+              visibility: visible !important;
+            }
+
+            .print-only {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #fff !important;
+            }
+
+            .receipt-paper {
+              width: 100% !important;
+              padding: 3mm 2mm !important;
+              overflow: visible !important;
+              color: #000 !important;
+              background: #fff !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .receipt-item,
+            .receipt-grand,
+            .receipt-total-row,
+            .receipt-meta {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+          }
+        `}</style>
+
+        {/* BRAND HEADER */}
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <div className="receipt-brand-mark">SM</div>
+
+          <h2 className="receipt-store">
+            {settings.storeName || "SliceMaster Pizza"}
+          </h2>
+
+          <div className="receipt-tagline">
+            FRESHLY MADE · SERVED WITH LOVE
+          </div>
+
+          {settings.showAddress && settings.address && (
+            <div className="receipt-contact">{settings.address}</div>
+          )}
+
+          {settings.showPhone && settings.phone && (
+            <div className="receipt-contact">Tel: {settings.phone}</div>
+          )}
+
+          {settings.showEmail && settings.email && (
+            <div className="receipt-contact">{settings.email}</div>
+          )}
+        </div>
+
+        {/* RECEIPT TITLE */}
+        <div className="receipt-rule receipt-rule-heavy" />
+        <div className="receipt-title">CUSTOMER RECEIPT</div>
+        <div className="receipt-rule receipt-rule-heavy" />
+
+        {/* INVOICE DETAILS */}
+        <div className="receipt-meta">
+          <span>Invoice #</span>
+          <strong>{invNo}</strong>
+        </div>
+
+        <div className="receipt-meta">
+          <span>Date</span>
+          <strong>{invDate}</strong>
+        </div>
+
+        <div className="receipt-meta">
+          <span>Customer</span>
+          <strong>{custName}</strong>
+        </div>
+
+        {printData.sale?.order_type && (
+          <div className="receipt-meta">
+            <span>Order Type</span>
+            <strong style={{ textTransform: "uppercase" }}>
+              {printData.sale.order_type}
+            </strong>
+          </div>
+        )}
+
+        {printData.sale?.table_number && (
+          <div className="receipt-meta">
+            <span>Table</span>
+            <strong>{printData.sale.table_number}</strong>
+          </div>
+        )}
+
+        {/* ITEMS HEADER */}
+        <div className="receipt-items-head">
+          <span>ITEM / QTY</span>
+          <span>AMOUNT</span>
+        </div>
+
+        {/* PRODUCT ITEMS */}
+        {itemsList.map((item, index) => {
+          const itemName = item.name || item.product_name || item.deal_name || "Product";
+          const price = Number(item.price_paisa ?? item.unit_price_paisa ?? 0);
+          const qty = Number(item.quantity || 0);
+          const line = Number(item.line_total_paisa ?? Math.round(price * qty));
+
+          return (
+            <div
+              className="receipt-item"
+              key={item.id || item.product_id || index}
+            >
+              <div className="receipt-item-info">
+                <strong>{itemName}</strong>
+                <small>{qty} × {money(price)}</small>
+              </div>
+              <strong>{money(line)}</strong>
+            </div>
+          );
+        })}
+
+        {/* TOTALS */}
+        <div className="receipt-rule" />
+
+        <div className="receipt-total-row">
+          <span>Total Items</span>
+          <strong>{totalQty}</strong>
+        </div>
+
+        <div className="receipt-total-row">
+          <span>Subtotal</span>
+          <strong>{money(subtotal)}</strong>
+        </div>
+
+        {discount > 0 && (
+          <div className="receipt-total-row">
+            <span>Discount</span>
+            <strong>-{money(discount)}</strong>
+          </div>
+        )}
+
+        {tax > 0 && (
+          <div className="receipt-total-row">
+            <span>Tax</span>
+            <strong>{money(tax)}</strong>
+          </div>
+        )}
+
+        {/* GRAND TOTAL */}
+        <div className="receipt-grand">
+          <span>GRAND TOTAL</span>
+          <strong>{money(total)}</strong>
+        </div>
+
+        {/* PAYMENT DETAILS */}
+        <div className="receipt-total-row">
+          <span>Paid ({(printData.paymentMethod || "cash").toUpperCase()})</span>
+          <strong>{money(received)}</strong>
+        </div>
+
+        <div className="receipt-total-row">
+          <span>Change</span>
+          <strong>{money(change)}</strong>
+        </div>
+
+        {/* QR CODE */}
+        <div className="receipt-qr">
+          <div className="receipt-qr-frame">
+            <QRCodeSVG
+              value={qrPayload}
+              size={105}
+              level="M"
+              bgColor="#ffffff"
+              fgColor="#000000"
+            />
+          </div>
+
+          <div style={{
+            fontSize: "9px",
+            fontWeight: 900,
+            marginTop: 5,
+            letterSpacing: "0.5px"
+          }}>
+            SCAN FOR DIGITAL BILL SUMMARY
           </div>
         </div>
-      )}
 
-      {toast && <div className="toast">{toast}</div>}
-    </>
+        {/* FOOTER */}
+        <div className="receipt-thanks">
+          {settings.receiptFooter || "Thank you for visiting!"}
+        </div>
+
+        <div className="receipt-message">
+          {settings.receiptMessage || "Please visit again."}
+        </div>
+
+        {/* DEVELOPER BRANDING */}
+        <div className="receipt-bottom">
+          <div style={{ fontWeight: 700 }}>
+            Powered by SliceMaster POS ERP · v3.1.0
+          </div>
+
+          <div style={{ fontWeight: 900 }}>
+            © 2026 POS ERP
+          </div>
+
+          <div style={{ fontWeight: 900 }}>
+            Engineered by Hasnain Chohan
+          </div>
+
+          <div style={{ fontWeight: 700 }}>
+            0323-6352450
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
+})()}
+
+{toast && <div className="toast">{toast}</div>}
+</>
+);
 }
