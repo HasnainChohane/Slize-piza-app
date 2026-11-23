@@ -2603,7 +2603,6 @@ export default function App() {
   const custName = printData.customerName || printData.sale?.customer_name || "Walk-in Customer";
   const itemsList = Array.isArray(printData.items) ? printData.items : [];
   const totalQty = itemsList.reduce((sum, it) => sum + Number(it.quantity || 0), 0);
-
   const subtotal = Number(printData.subtotalPaisa ?? 0);
   const discount = Number(printData.discountPaisa ?? 0);
   const tax = Number(printData.taxPaisa ?? 0);
@@ -2611,29 +2610,10 @@ export default function App() {
   const received = Number(printData.receivedPaisa ?? total);
   const change = Number(printData.changePaisa ?? 0);
 
-  const qrPayload = [
-    settings.storeName || "SliceMaster Pizza",
-    `Invoice: ${invNo}`,
-    `Date: ${invDate}`,
-    `Customer: ${custName}`,
-    ...itemsList.map(it => {
-      const price = Number(it.price_paisa ?? it.unit_price_paisa ?? 0);
-      const qty = Number(it.quantity || 0);
-      const line = Number(it.line_total_paisa ?? Math.round(price * qty));
-      return `${it.name || it.product_name || it.deal_name || "Item"} x${qty} = ${money(line)}`;
-    }),
-    `Subtotal: ${money(subtotal)}`,
-    `Discount: ${money(discount)}`,
-    `Tax: ${money(tax)}`,
-    `Total: ${money(total)}`,
-    `Payment: ${(printData.paymentMethod || "cash").toUpperCase()}`
-  ].join("\n");
-
   return (
     <div className="print-only">
       <div className="receipt-paper">
-
-       <style>{`
+        <style>{`
   .receipt-paper {
     width: 72mm;
     max-width: 72mm;
@@ -2641,287 +2621,155 @@ export default function App() {
     box-sizing: border-box;
     background: #fff;
     color: #000;
-    padding: 8px 6px;
+    padding: 4px;
     font-family: 'Courier New', Courier, monospace !important;
-    font-size: 14px !important;
-    font-weight: 700;
-    line-height: 1.35;
+    font-size: 15.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
   }
-
   .receipt-paper * {
     box-sizing: border-box;
     color: #000 !important;
+    font-family: 'Courier New', Courier, monospace !important;
   }
-
-    .receipt-brand-mark {
+  .receipt-brand-mark {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: #fff !important;
-    border: 2.5px solid #000 !important;
-    width: 56px;
-    height: 56px;
+    border: 2px solid #000 !important;
+    width: 44px;
+    height: 44px;
     padding: 0;
     border-radius: 50%;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
-
-
   .receipt-store {
-    font-size: 18px !important;
+    font-size: 20px !important;
     font-weight: 900 !important;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 3px 0 !important;
-    white-space: nowrap;
+    margin: 0 0 2px 0 !important;
   }
-
-  .receipt-tagline {
-    font-size: 13px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.5px;
-    margin-bottom: 5px !important;
-  }
-
   .receipt-contact {
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
+    font-size: 14px !important;
+    line-height: 1.25 !important;
   }
-
   .receipt-rule {
-    border-top: 1.5px dashed #000 !important;
-    margin: 7px 0 !important;
+    border-top: 1px dashed #000 !important;
+    margin: 5px 0 !important;
   }
-
   .receipt-rule-heavy {
     border-top: 2px solid #000 !important;
+    margin: 5px 0 !important;
   }
-
-  .receipt-title {
-    text-align: center;
-    font-size: 16px !important;
-    font-weight: 900 !important;
-    letter-spacing: 1px;
-    padding: 5px 0 !important;
-  }
-
   .receipt-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
     padding: 2px 0 !important;
-    font-size: 14px !important;
+    font-size: 14.5px !important;
   }
-
-  .receipt-meta span,
-  .receipt-meta strong {
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    white-space: nowrap;
+  .receipt-meta span, .receipt-meta strong {
+    font-size: 14.5px !important;
   }
-
   .receipt-items-head {
     display: flex;
     justify-content: space-between;
-    border-top: 1.5px dashed #000 !important;
-    border-bottom: 1.5px dashed #000 !important;
-    padding: 5px 0 !important;
-    font-size: 14px !important;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
+    padding: 4px 0 !important;
+    font-size: 15px !important;
     font-weight: 900 !important;
     margin-top: 5px !important;
   }
-
-  .receipt-items-head * {
-    font-size: 14px !important;
+  .receipt-items-head span {
+    font-size: 15px !important;
     font-weight: 900 !important;
   }
-
   .receipt-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 7px;
-    padding: 5px 0 !important;
-    border-bottom: 1px dotted #555 !important;
-    font-size: 14px !important;
+    gap: 5px;
+    padding: 4px 0 !important;
+    border-bottom: 1px dotted #888 !important;
   }
-
   .receipt-item-info {
     flex: 1;
     min-width: 0;
+    font-size: 15px !important;
     overflow-wrap: anywhere;
   }
-
   .receipt-item-info strong {
-    display: block;
-    font-size: 15px !important;
+    font-size: 15.5px !important;
     font-weight: 900 !important;
   }
-
-  .receipt-item-info small {
-    display: block;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    margin-top: 2px !important;
-  }
-
   .receipt-item > strong {
     white-space: nowrap;
-    font-size: 15px !important;
+    font-size: 15.5px !important;
     font-weight: 900 !important;
   }
-
   .receipt-total-row {
     display: flex;
     justify-content: space-between;
-    gap: 5px;
     padding: 2px 0 !important;
-    font-size: 14px !important;
+    font-size: 15.5px !important;
   }
-
-  .receipt-total-row span,
-  .receipt-total-row strong {
-    font-size: 14px !important;
-    font-weight: 800 !important;
+  .receipt-total-row span, .receipt-total-row strong {
+    font-size: 15.5px !important;
   }
-
   .receipt-grand {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 2px solid #000 !important;
     border-bottom: 2px solid #000 !important;
-    padding: 7px 2px !important;
-    margin: 8px 0 !important;
-    gap: 5px;
+    padding: 6px 0 !important;
+    margin: 5px 0 !important;
   }
-
-  .receipt-grand,
-  .receipt-grand * {
-    font-size: 17px !important;
+  .receipt-grand, .receipt-grand * {
+    font-size: 20.5px !important;
     font-weight: 900 !important;
-    white-space: nowrap;
   }
-
-  .receipt-qr {
-    text-align: center;
-    border-top: 1.5px dashed #000 !important;
-    border-bottom: 1.5px dashed #000 !important;
-    padding: 9px 0 !important;
-    margin: 9px 0 !important;
-  }
-
-  .receipt-qr * {
-    font-size: 13px !important;
-    font-weight: 800 !important;
-  }
-
-  .receipt-qr-frame {
-    display: inline-block;
-    border: 1.5px solid #000 !important;
-    padding: 5px !important;
-    background: #fff !important;
-  }
-
   .receipt-thanks {
-    font-size: 15px !important;
+    font-size: 15.5px !important;
     font-weight: 900 !important;
     text-align: center;
-    margin-top: 8px !important;
+    margin-top: 6px !important;
   }
-
-  .receipt-message {
-    text-align: center;
+  .receipt-copy {
     font-size: 13px !important;
     font-weight: 700 !important;
-    margin-top: 3px !important;
-  }
-
-  .receipt-bottom,
-  .receipt-bottom * {
     text-align: center;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1.4 !important;
+    margin-top: 4px !important;
+    padding-top: 4px !important;
+    border-top: 1px dashed #000 !important;
   }
-
-  .receipt-bottom {
-    border-top: 1.5px solid #000 !important;
-    padding-top: 6px !important;
-    margin-top: 8px !important;
-  }
-
   @media print {
-    @page {
-      size: 80mm auto;
-      margin: 0;
-    }
-
-    html, body {
-      width: 80mm !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #fff !important;
-    }
-
-    body * {
-      visibility: hidden !important;
-    }
-
-    .print-only,
-    .print-only * {
-      visibility: visible !important;
-    }
-
-    .print-only {
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 80mm !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #fff !important;
-    }
-
-    .receipt-paper {
-      width: 72mm !important;
-      max-width: 72mm !important;
-      margin: 0 auto !important;
-      padding: 3mm 1.5mm !important;
-      overflow: visible !important;
-      color: #000 !important;
-      background: #fff !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    .receipt-item,
-    .receipt-grand,
-    .receipt-total-row,
-    .receipt-meta,
-    .receipt-bottom {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
+    @page { size: 80mm auto; margin: 0; }
+    html, body { width: 80mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+    body * { visibility: hidden !important; }
+    .print-only, .print-only * { visibility: visible !important; }
+    .print-only { position: absolute !important; left: 0 !important; top: 0 !important; width: 80mm !important; margin: 0 !important; padding: 0 !important; }
+    .receipt-paper { width: 72mm !important; max-width: 72mm !important; margin: 0 auto !important; padding: 2mm 1.5mm !important; }
+    .receipt-item, .receipt-grand, .receipt-total-row, .receipt-meta { break-inside: avoid !important; }
   }
 `}</style>
 
 
-{/* BRAND HEADER */}
-        <div style={{ textAlign: "center", marginBottom: 8 }}>
+        {/* COMPACT HEADER WITH LOGO */}
+        <div style={{ textAlign: "center", marginBottom: 4 }}>
           <div className="receipt-brand-mark">
             <svg
-              width="42"
-              height="42"
+              width="24"
+              height="24"
               viewBox="0 0 64 64"
               fill="none"
               xmlns="http://w3.org"
               aria-label="Pizza Logo"
             >
-              {/* Crust */}
               <path
                 d="M10 18C23 11 41 11 54 18L50 25C39 19 25 19 14 25L10 18Z"
                 fill="#000000"
@@ -2929,7 +2777,6 @@ export default function App() {
                 strokeWidth="3"
                 strokeLinejoin="round"
               />
-              {/* Pizza Slice Triangle */}
               <path
                 d="M14 25L32 56L50 25"
                 stroke="#000000"
@@ -2937,78 +2784,43 @@ export default function App() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              {/* Pepperoni Toppings */}
               <circle cx="27" cy="31" r="3.5" fill="#000000" />
               <circle cx="38" cy="30" r="3" fill="#000000" />
               <circle cx="32" cy="41" r="3.5" fill="#000000" />
             </svg>
           </div>
-
-          <h2 className="receipt-store">
-            {settings.storeName || "SliceMaster Pizza"}
-          </h2>
-
-          <div className="receipt-tagline">
-            FRESHLY MADE · SERVED WITH LOVE
-          </div>
-
+          <h2 className="receipt-store">{settings.storeName || "SliceMaster Pizza"}</h2>
           {settings.showAddress && settings.address && (
             <div className="receipt-contact">{settings.address}</div>
           )}
-
           {settings.showPhone && settings.phone && (
             <div className="receipt-contact">Tel: {settings.phone}</div>
           )}
+        </div>
 
-          {settings.showEmail && settings.email && (
-            <div className="receipt-contact">{settings.email}</div>
+        <div className="receipt-rule-heavy" />
+
+        {/* INVOICE META */}
+        <div className="receipt-meta">
+          <span>Inv: <strong>{invNo}</strong></span>
+          <span>{invDate}</span>
+        </div>
+        <div className="receipt-meta">
+          <span>Cust: <strong>{custName}</strong></span>
+          {printData.sale?.order_type && (
+            <strong style={{ textTransform: "uppercase" }}>
+              {printData.sale.order_type}
+              {printData.sale?.table_number ? ` (T-${printData.sale.table_number})` : ""}
+            </strong>
           )}
         </div>
 
-        {/* RECEIPT TITLE */}
-        <div className="receipt-rule receipt-rule-heavy" />
-        <div className="receipt-title">CUSTOMER RECEIPT</div>
-        <div className="receipt-rule receipt-rule-heavy" />
-
-        {/* INVOICE DETAILS */}
-        <div className="receipt-meta">
-          <span>Invoice #</span>
-          <strong>{invNo}</strong>
-        </div>
-
-        <div className="receipt-meta">
-          <span>Date</span>
-          <strong>{invDate}</strong>
-        </div>
-
-        <div className="receipt-meta">
-          <span>Customer</span>
-          <strong>{custName}</strong>
-        </div>
-
-        {printData.sale?.order_type && (
-          <div className="receipt-meta">
-            <span>Order Type</span>
-            <strong style={{ textTransform: "uppercase" }}>
-              {printData.sale.order_type}
-            </strong>
-          </div>
-        )}
-
-        {printData.sale?.table_number && (
-          <div className="receipt-meta">
-            <span>Table</span>
-            <strong>{printData.sale.table_number}</strong>
-          </div>
-        )}
-
-        {/* ITEMS HEADER */}
+        {/* ITEMS */}
         <div className="receipt-items-head">
-          <span>ITEM / QTY</span>
-          <span>AMOUNT</span>
+          <span>ITEM (QTY × RATE)</span>
+          <span>AMT</span>
         </div>
 
-        {/* PRODUCT ITEMS */}
         {itemsList.map((item, index) => {
           const itemName = item.name || item.product_name || item.deal_name || "Product";
           const price = Number(item.price_paisa ?? item.unit_price_paisa ?? 0);
@@ -3016,13 +2828,9 @@ export default function App() {
           const line = Number(item.line_total_paisa ?? Math.round(price * qty));
 
           return (
-            <div
-              className="receipt-item"
-              key={item.id || item.product_id || index}
-            >
+            <div className="receipt-item" key={item.id || item.product_id || index}>
               <div className="receipt-item-info">
-                <strong>{itemName}</strong>
-                <small>{qty} × {money(price)}</small>
+                <strong>{itemName}</strong> ({qty}×{money(price)})
               </div>
               <strong>{money(line)}</strong>
             </div>
@@ -3031,24 +2839,16 @@ export default function App() {
 
         {/* TOTALS */}
         <div className="receipt-rule" />
-
         <div className="receipt-total-row">
-          <span>Total Items</span>
-          <strong>{totalQty}</strong>
-        </div>
-
-        <div className="receipt-total-row">
-          <span>Subtotal</span>
+          <span>Items: {totalQty} | Subtotal</span>
           <strong>{money(subtotal)}</strong>
         </div>
-
         {discount > 0 && (
           <div className="receipt-total-row">
             <span>Discount</span>
             <strong>-{money(discount)}</strong>
           </div>
         )}
-
         {tax > 0 && (
           <div className="receipt-total-row">
             <span>Tax</span>
@@ -3056,79 +2856,36 @@ export default function App() {
           </div>
         )}
 
-        {/* GRAND TOTAL */}
         <div className="receipt-grand">
-          <span>GRAND TOTAL</span>
+          <span>TOTAL</span>
           <strong>{money(total)}</strong>
         </div>
 
-        {/* PAYMENT DETAILS */}
+        {/* PAYMENT */}
         <div className="receipt-total-row">
           <span>Paid ({(printData.paymentMethod || "cash").toUpperCase()})</span>
           <strong>{money(received)}</strong>
         </div>
-
-        <div className="receipt-total-row">
-          <span>Change</span>
-          <strong>{money(change)}</strong>
-        </div>
-
-        {/* QR CODE */}
-        <div className="receipt-qr">
-          <div className="receipt-qr-frame">
-            <QRCodeSVG
-              value={qrPayload}
-              size={105}
-              level="M"
-              bgColor="#ffffff"
-              fgColor="#000000"
-            />
+                {change > 0 && (
+          <div className="receipt-total-row">
+            <span>Change</span>
+            <strong>{money(change)}</strong>
           </div>
+        )}
 
-          <div style={{
-            fontSize: "9px",
-            fontWeight: 900,
-            marginTop: 5,
-            letterSpacing: "0.5px"
-          }}>
-            SCAN FOR DIGITAL BILL SUMMARY
-          </div>
-        </div>
-
-        {/* FOOTER */}
+        {/* FOOTER & COPYRIGHT */}
         <div className="receipt-thanks">
           {settings.receiptFooter || "Thank you for visiting!"}
         </div>
-
-        <div className="receipt-message">
-          {settings.receiptMessage || "Please visit again."}
+        <div className="receipt-copy">
+          © 2026 POS ERP · Engineered by Hasnain Chohan
         </div>
-
-        {/* DEVELOPER BRANDING */}
-        <div className="receipt-bottom">
-          <div style={{ fontWeight: 700 }}>
-            Powered by  POS ERP · v3.1.0
-          </div>
-
-          <div style={{ fontWeight: 900 }}>
-            © 2026 POS ERP
-          </div>
-
-          <div style={{ fontWeight: 900 }}>
-            Engineered by Hasnain Chohan
-          </div>
-
-          <div style={{ fontWeight: 700 }}>
-            0323-6352450
-          </div>
-        </div>
-
       </div>
     </div>
   );
 })()}
-
 {toast && <div className="toast">{toast}</div>}
 </>
 );
 }
+
